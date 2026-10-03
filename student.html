@@ -233,7 +233,7 @@
 <script>
   let currentStudentData = null;
 
-  // Window Scope Binding for Tab Switching
+  // 1. WINDOW SCOPE TAB SWITCHER
   window.switchStudentTab = function(showId, hideId, activeBtn, inactiveBtnId) {
     const showEl = document.getElementById(showId);
     const hideEl = document.getElementById(hideId);
@@ -251,18 +251,18 @@
     }
   };
 
-  // Window Scope Binding for Record Verification Lookup
+  // 2. FETCH STUDENT DATA FOR VERIFICATION
   window.fetchStudentDataForVerification = async function() {
     const regNo = document.getElementById('lookupRegNoInput').value.trim();
     const alertBox = document.getElementById('lookupAlert');
     alertBox.innerHTML = '';
 
     if (!regNo) {
-      alertBox.innerHTML = `<div class="alert alert-warning py-2 mt-2">Please enter a valid Register Number.</div>`;
+      alertBox.innerHTML = `<div class="alert alert-warning py-2 mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Please enter a valid Register Number.</div>`;
       return;
     }
 
-    alertBox.innerHTML = `<div class="text-primary mt-2"><span class="spinner-border spinner-border-sm me-2"></span>Searching student records...</div>`;
+    alertBox.innerHTML = `<div class="text-primary mt-2"><span class="spinner-border spinner-border-sm me-2"></span> Searching student records...</div>`;
 
     try {
       const response = await fetch(SCRIPT_URL, {
@@ -274,7 +274,7 @@
       if (res.success && res.data) {
         currentStudentData = res.data;
         alertBox.innerHTML = '';
-        
+
         document.getElementById('displayRegNo').value = res.data.registerNumber || regNo;
         document.getElementById('displayStudentName').value = res.data.studentName || '';
         document.getElementById('displayFatherName').value = res.data.fatherName || '';
@@ -288,14 +288,14 @@
 
         document.getElementById('verificationSection').style.display = 'block';
       } else {
-        alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2">${res.message || 'Register Number not found.'}</div>`;
+        alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-x-circle me-1"></i> ${res.message || 'Register Number not found.'}</div>`;
       }
     } catch (err) {
-      alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2">Error connecting to server: ${err.message}</div>`;
+      alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-exclamation-octagon me-1"></i> Error connecting to server: ${err.message}</div>`;
     }
   };
 
-  // Window Scope Binding for Correction Toggles
+  // 3. CORRECTION FIELD TOGGLES
   window.toggleCorrectionField = function(field) {
     const isChecked = document.getElementById(`chk${field}Correction`).checked;
 
@@ -331,6 +331,7 @@
     updateProofVisibility();
   };
 
+  // 4. UPDATE PROOF UPLOAD BOX VISIBILITY
   function updateProofVisibility() {
     const nameChk = document.getElementById('chkNameCorrection').checked;
     const fatherChk = document.getElementById('chkFatherCorrection').checked;
@@ -345,7 +346,7 @@
     document.getElementById('proofUploadSection').style.display = (show10th || showTc) ? 'block' : 'none';
   }
 
-  // Window Scope Binding for Wizard Steps
+  // 5. WIZARD STEP NAVIGATION
   window.proceedToPhotoStep = function() {
     if (!document.getElementById('chkDetailsConfirmed').checked) {
       alert("Please confirm the declaration checkbox before proceeding.");
@@ -355,6 +356,27 @@
       alert("Please enter your Section.");
       return;
     }
+
+    // Enforce Proof Document Validation
+    if (document.getElementById('chkNameCorrection').checked) {
+      const f10 = document.getElementById('proof10thFileInput');
+      if (!f10 || !f10.files || !f10.files[0]) {
+        alert("Please upload your 10th Marksheet Proof Document.");
+        return;
+      }
+    }
+
+    const requiresTc = document.getElementById('chkFatherCorrection').checked ||
+                       document.getElementById('chkDobCorrection').checked ||
+                       document.getElementById('chkNationalityCorrection').checked;
+    if (requiresTc) {
+      const fTc = document.getElementById('proofTcFileInput');
+      if (!fTc || !fTc.files || !fTc.files[0]) {
+        alert("Please upload your Transfer Certificate (TC) Proof Document.");
+        return;
+      }
+    }
+
     document.getElementById('verificationSection').style.display = 'none';
     document.getElementById('photoSection').style.display = 'block';
   };
@@ -364,30 +386,35 @@
     document.getElementById('verificationSection').style.display = 'block';
   };
 
+  // 6. PHOTO PREVIEW HANDLER
   window.previewPhoto = function(input) {
+    const previewContainer = document.getElementById('photoPreviewContainer');
     if (input.files && input.files[0]) {
       const file = input.files[0];
       if (file.size > 80 * 1024) {
         alert("File size exceeds 80KB limit! Please compress your image.");
         input.value = "";
+        previewContainer.innerHTML = `<i class="bi bi-person text-secondary fs-1"></i>`;
         return;
       }
       const reader = new FileReader();
       reader.onload = function(e) {
-        document.getElementById('photoPreviewContainer').innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 100%;">`;
+        previewContainer.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 100%; object-fit: cover;">`;
       };
       reader.readAsDataURL(file);
+    } else {
+      previewContainer.innerHTML = `<i class="bi bi-person text-secondary fs-1"></i>`;
     }
   };
 
-  // Window Scope Binding for Form Submit Submission
+  // 7. FORM SUBMISSION HANDLER
   window.handleVerifiedSubmission = async function(event) {
     if (event) event.preventDefault();
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('submitAlert');
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Submitting...`;
+    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Submitting Application...`;
     alertBox.innerHTML = '';
 
     try {
@@ -395,7 +422,7 @@
       const photoFile = photoFileInput.files ? photoFileInput.files[0] : null;
       const photoBase64 = photoFile ? await convertFileToBase64(photoFile) : null;
 
-      // Proof Files
+      // Proof Document Files
       const input10th = document.getElementById('proof10thFileInput');
       const inputTc = document.getElementById('proofTcFileInput');
 
@@ -415,12 +442,14 @@
         specialization: document.getElementById('displaySpecialization').value,
         section: document.getElementById('displaySection').value,
         
+        // Correction Flags
         isNameCorrected: document.getElementById('chkNameCorrection').checked,
         isFatherCorrected: document.getElementById('chkFatherCorrection').checked,
         isGenderCorrected: document.getElementById('chkGenderCorrection').checked,
         isDobCorrected: document.getElementById('chkDobCorrection').checked,
         isNationalityCorrected: document.getElementById('chkNationalityCorrection').checked,
 
+        // Encoded Files
         photoData: photoBase64,
         proof10thData: proof10thBase64,
         proofTcData: proofTcBase64
@@ -433,14 +462,24 @@
       const res = await response.json();
 
       if (res.success) {
-        alertBox.innerHTML = `<div class="alert alert-success p-3 rounded-3">Application submitted successfully! Tracking Ref ID: <strong>${res.trackingId || 'OK'}</strong></div>`;
+        alertBox.innerHTML = `
+          <div class="alert alert-success p-3 rounded-3 shadow-sm">
+            <i class="bi bi-check-circle-fill me-2"></i> Application submitted successfully! Tracking Ref ID: <strong>${res.trackingId || 'OK'}</strong>
+          </div>`;
         document.getElementById('studentVerificationForm').reset();
         document.getElementById('photoSection').style.display = 'none';
+        document.getElementById('photoPreviewContainer').innerHTML = `<i class="bi bi-person text-secondary fs-1"></i>`;
       } else {
-        alertBox.innerHTML = `<div class="alert alert-danger p-3 rounded-3">Submission failed: ${res.message}</div>`;
+        alertBox.innerHTML = `
+          <div class="alert alert-danger p-3 rounded-3 shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> Submission failed: ${res.message}
+          </div>`;
       }
     } catch (err) {
-      alertBox.innerHTML = `<div class="alert alert-danger p-3 rounded-3">Error submitting application: ${err.message}</div>`;
+      alertBox.innerHTML = `
+        <div class="alert alert-danger p-3 rounded-3 shadow-sm">
+          <i class="bi bi-exclamation-octagon-fill me-2"></i> Error submitting application: ${err.message}
+        </div>`;
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = `Final Submit Photograph`;
@@ -448,6 +487,7 @@
     return false;
   };
 
+  // FILE TO BASE64 CONVERTER
   function convertFileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -457,13 +497,13 @@
     });
   }
 
-  // Window Scope Binding for Status Checker
+  // 8. SUBMISSION TRACKER
   window.checkStatus = async function() {
     const query = document.getElementById('trackSearchInput').value.trim();
     const resBox = document.getElementById('statusResult');
     if (!query) return;
 
-    resBox.innerHTML = `<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>`;
+    resBox.innerHTML = `<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>`;
 
     try {
       const response = await fetch(SCRIPT_URL, {
@@ -474,16 +514,16 @@
 
       if (res.success && res.data) {
         resBox.innerHTML = `
-          <div class="card border-0 bg-light p-3 rounded-3">
-            <h6 class="fw-bold">Status: <span class="badge bg-${res.data.status === 'Approved' ? 'success' : 'warning'}">${res.data.status}</span></h6>
+          <div class="card border-0 bg-light p-3 rounded-3 shadow-sm">
+            <h6 class="fw-bold mb-2">Status: <span class="badge bg-${res.data.status === 'Approved' ? 'success' : res.data.status === 'Rejected' ? 'danger' : 'warning'}">${res.data.status}</span></h6>
             <p class="mb-1"><strong>Remarks:</strong> ${res.data.remarks || 'No remarks provided yet.'}</p>
             <small class="text-muted">Last Updated: ${res.data.updatedAt || 'N/A'}</small>
           </div>`;
       } else {
-        resBox.innerHTML = `<div class="alert alert-warning">No records found for query.</div>`;
+        resBox.innerHTML = `<div class="alert alert-warning py-2 mt-2"><i class="bi bi-info-circle me-1"></i> No records found for query.</div>`;
       }
     } catch (err) {
-      resBox.innerHTML = `<div class="alert alert-danger">Error retrieving status.</div>`;
+      resBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Error retrieving status.</div>`;
     }
   };
 </script>
