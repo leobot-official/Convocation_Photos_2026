@@ -232,15 +232,25 @@
 <script>
   let currentStudentData = null;
 
-  function switchStudentTab(showId, hideId, activeBtn, inactiveBtnId) {
-    document.getElementById(showId).style.display = 'block';
-    document.getElementById(hideId).style.display = 'none';
-    activeBtn.classList.add('btn-primary', 'active');
-    activeBtn.classList.remove('btn-outline-primary');
-    const inactive = document.getElementById(inactiveBtnId);
-    inactive.classList.add('btn-outline-primary');
-    inactive.classList.remove('btn-primary', 'active');
-  }
+ <script>
+  // Attach directly to Window Scope to guarantee execution from inline events
+  window.switchStudentTab = function(showId, hideId, activeBtn, inactiveBtnId) {
+    const showEl = document.getElementById(showId);
+    const hideEl = document.getElementById(hideId);
+    if (showEl) showEl.style.display = 'block';
+    if (hideEl) hideEl.style.display = 'none';
+
+    if (activeBtn) {
+      activeBtn.classList.add('btn-primary', 'active');
+      activeBtn.classList.remove('btn-outline-primary');
+    }
+    const inactive = typeof inactiveBtnId === 'string' ? document.getElementById(inactiveBtnId) : inactiveBtnId;
+    if (inactive) {
+      inactive.classList.add('btn-outline-primary');
+      inactive.classList.remove('btn-primary', 'active');
+    }
+  };
+</script>
 
   async function fetchStudentDataForVerification() {
     const regNo = document.getElementById('lookupRegNoInput').value.trim();
