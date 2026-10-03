@@ -1,0 +1,458 @@
+<div class="app-card p-3 p-md-4">
+  
+  <!-- BRANDING HEADER BANNER -->
+  <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded-4 mb-4 border">
+    <div class="d-flex align-items-center gap-3">
+      <img src="https://lh3.googleusercontent.com/d/148OBvNZskDANpINQYJcSB9NdXX71tB-T" alt="University Logo" style="height: 52px; width: auto; object-fit: contain;">
+      <div>
+        <h5 class="fw-bold text-dark mb-0">Convocation Photo Clearance Portal</h5>
+        <small class="text-muted">Hindustan Institute of Technology & Science</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP NAVIGATION TAB SWITCHER -->
+  <div class="row g-2 mb-4">
+    <div class="col-6">
+      <button type="button" id="tabBtn1" class="btn btn-primary w-100 py-2.5 fw-bold rounded-3 active shadow-sm" onclick="switchStudentTab('studentFlowView', 'statusView', this, 'tabBtn2')">
+        <i class="bi bi-file-earmark-person me-1"></i> 1. Verification & Photo Upload
+      </button>
+    </div>
+    <div class="col-6">
+      <button type="button" id="tabBtn2" class="btn btn-outline-primary w-100 py-2.5 fw-bold rounded-3" onclick="switchStudentTab('statusView', 'studentFlowView', this, 'tabBtn1')">
+        <i class="bi bi-clock-history me-1"></i> 2. Track Submission
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB 1: VERIFICATION & PHOTO UPLOAD FLOW -->
+  <div id="studentFlowView">
+    
+    <!-- STEP 1: REGISTER NUMBER LOOKUP -->
+    <div id="lookupSection" class="card border-0 bg-light p-3 p-md-4 mb-4 rounded-4 shadow-sm">
+      <h5 class="fw-bold text-primary mb-3"><i class="bi bi-search me-2"></i>Step 1: Fetch Student Profile</h5>
+      <div class="row g-2">
+        <div class="col-md-9">
+          <input type="text" id="lookupRegNoInput" class="form-control form-control-lg text-uppercase" placeholder="Enter Register Number (e.g., 24SP2170001)">
+        </div>
+        <div class="col-md-3">
+          <button type="button" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm" onclick="fetchStudentDataForVerification()">
+            Fetch Details
+          </button>
+        </div>
+      </div>
+      <div id="lookupAlert" class="mt-2"></div>
+    </div>
+
+    <!-- STEP 2 & 3 FORM WRAPPER -->
+    <form id="studentVerificationForm" onsubmit="return handleVerifiedSubmission(event);">
+      
+      <!-- STEP 2: SUMMARY & CORRECTION FORM -->
+      <div id="verificationSection" style="display: none;">
+        <div class="card border-0 shadow-sm p-3 p-md-4 mb-4 rounded-4">
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-person-vcard me-2"></i>Step 2: Verify Profile Record</h5>
+            <span class="badge bg-primary text-wrap" id="deptYearBadge"></span>
+          </div>
+          
+          <div class="alert alert-info py-2 rounded-3" role="alert">
+            <small><i class="bi bi-info-circle me-1"></i> Verify details against 10th Marksheet and TC. To correct a field, check the box, update the value, and attach proof.</small>
+          </div>
+
+          <!-- Profile Fields Grid -->
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-bold small text-muted">Register Number</label>
+              <input type="text" id="displayRegNo" name="registerNumber" class="form-control bg-light" readonly>
+            </div>
+
+            <div class="col-md-8">
+              <label class="form-label fw-bold small text-muted">Email Address <span class="text-danger">*</span></label>
+              <input type="email" id="displayEmail" name="studentEmail" class="form-control" required placeholder="student@gmail.com">
+            </div>
+
+            <div class="col-md-6">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-bold small text-muted mb-0">Student Name (10th Certificate)</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkNameCorrection" onchange="toggleCorrectionField('Name')">
+                  <label class="form-check-label text-danger fw-bold small" for="chkNameCorrection">Correction</label>
+                </div>
+              </div>
+              <input type="text" id="displayStudentName" name="studentName" class="form-control bg-light" readonly required>
+            </div>
+
+            <div class="col-md-6">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-bold small text-muted mb-0">Father Name (TC Record)</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkFatherCorrection" onchange="toggleCorrectionField('Father')">
+                  <label class="form-check-label text-danger fw-bold small" for="chkFatherCorrection">Correction</label>
+                </div>
+              </div>
+              <input type="text" id="displayFatherName" name="fatherName" class="form-control bg-light" readonly required>
+            </div>
+
+            <div class="col-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-bold small text-muted mb-0">Gender</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkGenderCorrection" onchange="toggleCorrectionField('Gender')">
+                  <label class="form-check-label text-danger fw-bold small" for="chkGenderCorrection">Correction</label>
+                </div>
+              </div>
+              <input type="text" id="displayGender" name="gender" class="form-control bg-light" readonly required>
+              <select id="selectGender" class="form-select mt-1" style="display:none;">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-bold small text-muted mb-0">Date of Birth (TC)</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkDobCorrection" onchange="toggleCorrectionField('Dob')">
+                  <label class="form-check-label text-danger fw-bold small" for="chkDobCorrection">Correction</label>
+                </div>
+              </div>
+              <input type="text" id="displayDob" name="dob" class="form-control bg-light" readonly required>
+              <input type="date" id="inputDob" class="form-control mt-1" style="display:none;">
+            </div>
+
+            <div class="col-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-bold small text-muted mb-0">Nationality</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="chkNationalityCorrection" onchange="toggleCorrectionField('Nationality')">
+                  <label class="form-check-label text-danger fw-bold small" for="chkNationalityCorrection">Correction</label>
+                </div>
+              </div>
+              <input type="text" id="displayNationality" name="nationality" class="form-control bg-light" readonly required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-bold small text-muted">Branch / Department</label>
+              <input type="text" id="displayBranch" name="department" class="form-control bg-light" readonly required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-bold small text-muted">Specialization</label>
+              <input type="text" id="displaySpecialization" name="specialization" class="form-control bg-light" readonly>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-bold small text-muted">Section <span class="text-danger">*</span></label>
+              <input type="text" id="displaySection" name="section" class="form-control" placeholder="e.g. A, B, Sec-1" required>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CONDITIONAL PROOF UPLOADS -->
+        <div id="proofUploadSection" class="card border-warning p-3 p-md-4 mb-4 rounded-4" style="display:none; background-color: #fffdf5;">
+          <h6 class="fw-bold text-warning-emphasis mb-3"><i class="bi bi-paperclip me-2"></i>Proof Document Attachments</h6>
+          <div class="row g-3">
+            <div class="col-md-6" id="box10thProof" style="display:none;">
+              <label class="form-label fw-bold small">10th Marksheet Proof (PDF/JPEG, Max 2MB) <span class="text-danger">*</span></label>
+              <input type="file" class="form-control" id="proof10thFileInput" accept="image/jpeg,image/jpg,application/pdf">
+            </div>
+            <div class="col-md-6" id="boxTcProof" style="display:none;">
+              <label class="form-label fw-bold small">Transfer Certificate Proof (PDF/JPEG, Max 2MB) <span class="text-danger">*</span></label>
+              <input type="file" class="form-control" id="proofTcFileInput" accept="image/jpeg,image/jpg,application/pdf">
+            </div>
+          </div>
+        </div>
+
+        <!-- CONFIRMATION & STEP 3 PROCEED -->
+        <div class="form-check mb-4">
+          <input class="form-check-input" type="checkbox" id="chkDetailsConfirmed">
+          <label class="form-check-label fw-semibold" for="chkDetailsConfirmed">
+            I declare that the above details match my official 10th Marksheet & TC documents.
+          </label>
+        </div>
+
+        <div class="text-end">
+          <button type="button" class="btn btn-success btn-lg px-4 fw-bold shadow-sm" onclick="proceedToPhotoStep()">
+            Confirm Details & Proceed <i class="bi bi-arrow-right-circle ms-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: CONVOCATION PHOTO UPLOAD -->
+      <div id="photoSection" style="display: none;" class="card border-0 shadow-sm p-3 p-md-4 mb-4 rounded-4 bg-light">
+        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-camera me-2"></i>Step 3: Passport Photograph Upload</h5>
+        <div class="row g-3 mb-3">
+          <div class="col-md-8">
+            <label class="form-label fw-bold small text-muted">
+              Upload Photo (JPEG, Strictly Max 80KB, Plain White Background) <span class="text-danger">*</span>
+            </label>
+            <input type="file" class="form-control form-control-lg" id="photoFileInput" accept="image/jpeg,image/jpg" required onchange="previewPhoto(this)">
+            <small class="text-muted d-block mt-1">Requirements: Front facing, formal attire, studio lighting, no sunglasses.</small>
+          </div>
+          <div class="col-md-4 text-center">
+            <label class="form-label fw-bold small text-muted d-block">Preview</label>
+            <div id="photoPreviewContainer" class="border rounded bg-white d-flex align-items-center justify-content-center" style="width: 120px; height: 140px; margin: 0 auto;">
+              <i class="bi bi-person text-secondary fs-1"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <button type="button" class="btn btn-outline-secondary fw-bold" onclick="backToVerificationStep()">
+            <i class="bi bi-arrow-left me-1"></i> Back
+          </button>
+          <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm" id="submitBtn">
+            Final Submit Application
+          </button>
+        </div>
+      </div>
+
+    </form>
+    <div id="submitAlert" class="mt-3"></div>
+  </div>
+
+  <!-- TAB 2: STATUS TRACKER -->
+  <div id="statusView" style="display: none;">
+    <div class="row g-2 mb-4">
+      <div class="col-md-9">
+        <input type="text" id="trackSearchInput" class="form-control form-control-lg text-uppercase" placeholder="Enter Register Number (e.g., 24SP2170001)">
+      </div>
+      <div class="col-md-3">
+        <button type="button" class="btn btn-secondary btn-lg w-100 fw-bold shadow-sm" onclick="checkStatus()">
+          Check Status
+        </button>
+      </div>
+    </div>
+    <div id="statusResult"></div>
+  </div>
+</div>
+
+<script>
+  let currentStudentData = null;
+
+  function switchStudentTab(showId, hideId, activeBtn, inactiveBtnId) {
+    document.getElementById(showId).style.display = 'block';
+    document.getElementById(hideId).style.display = 'none';
+    activeBtn.classList.add('btn-primary', 'active');
+    activeBtn.classList.remove('btn-outline-primary');
+    const inactive = document.getElementById(inactiveBtnId);
+    inactive.classList.add('btn-outline-primary');
+    inactive.classList.remove('btn-primary', 'active');
+  }
+
+  async function fetchStudentDataForVerification() {
+    const regNo = document.getElementById('lookupRegNoInput').value.trim();
+    const alertBox = document.getElementById('lookupAlert');
+    alertBox.innerHTML = '';
+
+    if (!regNo) {
+      alertBox.innerHTML = `<div class="alert alert-warning py-2 mt-2">Please enter a valid Register Number.</div>`;
+      return;
+    }
+
+    alertBox.innerHTML = `<div class="text-primary mt-2"><span class="spinner-border spinner-border-sm me-2"></span>Searching student records...</div>`;
+
+    try {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "getStudentData", registerNumber: regNo })
+      });
+      const res = await response.json();
+
+      if (res.success && res.data) {
+        currentStudentData = res.data;
+        alertBox.innerHTML = '';
+        
+        document.getElementById('displayRegNo').value = res.data.registerNumber || regNo;
+        document.getElementById('displayStudentName').value = res.data.studentName || '';
+        document.getElementById('displayFatherName').value = res.data.fatherName || '';
+        document.getElementById('displayGender').value = res.data.gender || '';
+        document.getElementById('displayDob').value = res.data.dob || '';
+        document.getElementById('displayNationality').value = res.data.nationality || '';
+        document.getElementById('displayBranch').value = res.data.department || res.data.branch || '';
+        document.getElementById('displaySpecialization').value = res.data.specialization || '';
+        document.getElementById('displaySection').value = res.data.section || '';
+        document.getElementById('deptYearBadge').innerText = `${res.data.year || ''} Year | ${res.data.department || res.data.branch || ''}`;
+
+        document.getElementById('verificationSection').style.display = 'block';
+      } else {
+        alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2">${res.message || 'Register Number not found.'}</div>`;
+      }
+    } catch (err) {
+      alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2">Error connecting to server: ${err.message}</div>`;
+    }
+  }
+
+  function toggleCorrectionField(field) {
+    const isChecked = document.getElementById(`chk${field}Correction`).checked;
+
+    if (field === 'Gender') {
+      document.getElementById('displayGender').style.display = isChecked ? 'none' : 'block';
+      document.getElementById('selectGender').style.display = isChecked ? 'block' : 'none';
+    } else if (field === 'Dob') {
+      document.getElementById('displayDob').style.display = isChecked ? 'none' : 'block';
+      document.getElementById('inputDob').style.display = isChecked ? 'block' : 'none';
+    } else {
+      let elementId = `display${field}`;
+      if (field === 'Name') elementId = 'displayStudentName';
+      if (field === 'Father') elementId = 'displayFatherName';
+
+      const inputEl = document.getElementById(elementId);
+      if (inputEl) {
+        inputEl.readOnly = !isChecked;
+        if (isChecked) {
+          inputEl.classList.remove('bg-light');
+          inputEl.classList.add('border-warning', 'bg-white');
+          inputEl.focus();
+        } else {
+          inputEl.classList.add('bg-light');
+          inputEl.classList.remove('border-warning', 'bg-white');
+          if (currentStudentData) {
+            if (field === 'Name') inputEl.value = currentStudentData.studentName || '';
+            if (field === 'Father') inputEl.value = currentStudentData.fatherName || '';
+            if (field === 'Nationality') inputEl.value = currentStudentData.nationality || '';
+          }
+        }
+      }
+    }
+    updateProofVisibility();
+  }
+
+  function updateProofVisibility() {
+    const nameChk = document.getElementById('chkNameCorrection').checked;
+    const fatherChk = document.getElementById('chkFatherCorrection').checked;
+    const dobChk = document.getElementById('chkDobCorrection').checked;
+    const natChk = document.getElementById('chkNationalityCorrection').checked;
+
+    const show10th = nameChk;
+    const showTc = fatherChk || dobChk || natChk;
+
+    document.getElementById('box10thProof').style.display = show10th ? 'block' : 'none';
+    document.getElementById('boxTcProof').style.display = showTc ? 'block' : 'none';
+    document.getElementById('proofUploadSection').style.display = (show10th || showTc) ? 'block' : 'none';
+  }
+
+  function proceedToPhotoStep() {
+    if (!document.getElementById('chkDetailsConfirmed').checked) {
+      alert("Please confirm the declaration checkbox before proceeding.");
+      return;
+    }
+    if (!document.getElementById('displaySection').value.trim()) {
+      alert("Please enter your Section.");
+      return;
+    }
+    document.getElementById('verificationSection').style.display = 'none';
+    document.getElementById('photoSection').style.display = 'block';
+  }
+
+  function backToVerificationStep() {
+    document.getElementById('photoSection').style.display = 'none';
+    document.getElementById('verificationSection').style.display = 'block';
+  }
+
+  function previewPhoto(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      if (file.size > 80 * 1024) {
+        alert("File size exceeds 80KB limit! Please compress your image.");
+        input.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('photoPreviewContainer').innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 100%;">`;
+      }
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async function handleVerifiedSubmission(event) {
+    event.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    const alertBox = document.getElementById('submitAlert');
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Submitting...`;
+    alertBox.innerHTML = '';
+
+    try {
+      const photoFile = document.getElementById('photoFileInput').files[0];
+      const photoBase64 = photoFile ? await convertFileToBase64(photoFile) : null;
+
+      const payload = {
+        action: "submitStudentApplication",
+        registerNumber: document.getElementById('displayRegNo').value,
+        studentEmail: document.getElementById('displayEmail').value,
+        studentName: document.getElementById('displayStudentName').value,
+        fatherName: document.getElementById('displayFatherName').value,
+        gender: document.getElementById('chkGenderCorrection').checked ? document.getElementById('selectGender').value : document.getElementById('displayGender').value,
+        dob: document.getElementById('chkDobCorrection').checked ? document.getElementById('inputDob').value : document.getElementById('displayDob').value,
+        nationality: document.getElementById('displayNationality').value,
+        department: document.getElementById('displayBranch').value,
+        specialization: document.getElementById('displaySpecialization').value,
+        section: document.getElementById('displaySection').value,
+        photoData: photoBase64
+      };
+
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      const res = await response.json();
+
+      if (res.success) {
+        alertBox.innerHTML = `<div class="alert alert-success p-3 rounded-3">Application submitted successfully! Tracking Ref ID: <strong>${res.trackingId || 'OK'}</strong></div>`;
+        document.getElementById('studentVerificationForm').reset();
+        document.getElementById('photoSection').style.display = 'none';
+      } else {
+        alertBox.innerHTML = `<div class="alert alert-danger p-3 rounded-3">Submission failed: ${res.message}</div>`;
+      }
+    } catch (err) {
+      alertBox.innerHTML = `<div class="alert alert-danger p-3 rounded-3">Error submitting application: ${err.message}</div>`;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `Final Submit Photograph`;
+    }
+    return false;
+  }
+
+  function convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  async function checkStatus() {
+    const query = document.getElementById('trackSearchInput').value.trim();
+    const resBox = document.getElementById('statusResult');
+    if (!query) return;
+
+    resBox.innerHTML = `<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>`;
+
+    try {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "checkSubmissionStatus", query: query })
+      });
+      const res = await response.json();
+
+      if (res.success && res.data) {
+        resBox.innerHTML = `
+          <div class="card border-0 bg-light p-3 rounded-3">
+            <h6 class="fw-bold">Status: <span class="badge bg-${res.data.status === 'Approved' ? 'success' : 'warning'}">${res.data.status}</span></h6>
+            <p class="mb-1"><strong>Remarks:</strong> ${res.data.remarks || 'No remarks provided yet.'}</p>
+            <small class="text-muted">Last Updated: ${res.data.updatedAt || 'N/A'}</small>
+          </div>`;
+      } else {
+        resBox.innerHTML = `<div class="alert alert-warning">No records found for query.</div>`;
+      }
+    } catch (err) {
+      resBox.innerHTML = `<div class="alert alert-danger">Error retrieving status.</div>`;
+    }
+  }
+</script>
