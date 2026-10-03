@@ -61,6 +61,7 @@
 
           <!-- Profile Fields Grid -->
           <div class="row g-3">
+            
             <div class="col-md-4">
               <label class="form-label fw-bold small text-muted">Register Number</label>
               <input type="text" id="displayRegNo" name="registerNumber" class="form-control bg-light" readonly>
@@ -232,8 +233,7 @@
 <script>
   let currentStudentData = null;
 
- <script>
-  // Attach directly to Window Scope to guarantee execution from inline events
+  // Window Scope Binding for Tab Switching
   window.switchStudentTab = function(showId, hideId, activeBtn, inactiveBtnId) {
     const showEl = document.getElementById(showId);
     const hideEl = document.getElementById(hideId);
@@ -250,9 +250,9 @@
       inactive.classList.remove('btn-primary', 'active');
     }
   };
-</script>
 
-  async function fetchStudentDataForVerification() {
+  // Window Scope Binding for Record Verification Lookup
+  window.fetchStudentDataForVerification = async function() {
     const regNo = document.getElementById('lookupRegNoInput').value.trim();
     const alertBox = document.getElementById('lookupAlert');
     alertBox.innerHTML = '';
@@ -293,9 +293,10 @@
     } catch (err) {
       alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2">Error connecting to server: ${err.message}</div>`;
     }
-  }
+  };
 
-  function toggleCorrectionField(field) {
+  // Window Scope Binding for Correction Toggles
+  window.toggleCorrectionField = function(field) {
     const isChecked = document.getElementById(`chk${field}Correction`).checked;
 
     if (field === 'Gender') {
@@ -328,7 +329,7 @@
       }
     }
     updateProofVisibility();
-  }
+  };
 
   function updateProofVisibility() {
     const nameChk = document.getElementById('chkNameCorrection').checked;
@@ -344,7 +345,8 @@
     document.getElementById('proofUploadSection').style.display = (show10th || showTc) ? 'block' : 'none';
   }
 
-  function proceedToPhotoStep() {
+  // Window Scope Binding for Wizard Steps
+  window.proceedToPhotoStep = function() {
     if (!document.getElementById('chkDetailsConfirmed').checked) {
       alert("Please confirm the declaration checkbox before proceeding.");
       return;
@@ -355,14 +357,14 @@
     }
     document.getElementById('verificationSection').style.display = 'none';
     document.getElementById('photoSection').style.display = 'block';
-  }
+  };
 
-  function backToVerificationStep() {
+  window.backToVerificationStep = function() {
     document.getElementById('photoSection').style.display = 'none';
     document.getElementById('verificationSection').style.display = 'block';
-  }
+  };
 
-  function previewPhoto(input) {
+  window.previewPhoto = function(input) {
     if (input.files && input.files[0]) {
       const file = input.files[0];
       if (file.size > 80 * 1024) {
@@ -373,13 +375,14 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         document.getElementById('photoPreviewContainer').innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 100%;">`;
-      }
+      };
       reader.readAsDataURL(file);
     }
-  }
+  };
 
-  async function handleVerifiedSubmission(event) {
-    event.preventDefault();
+  // Window Scope Binding for Form Submit Submission
+  window.handleVerifiedSubmission = async function(event) {
+    if (event) event.preventDefault();
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('submitAlert');
 
@@ -388,8 +391,16 @@
     alertBox.innerHTML = '';
 
     try {
-      const photoFile = document.getElementById('photoFileInput').files[0];
+      const photoFileInput = document.getElementById('photoFileInput');
+      const photoFile = photoFileInput.files ? photoFileInput.files[0] : null;
       const photoBase64 = photoFile ? await convertFileToBase64(photoFile) : null;
+
+      // Proof Files
+      const input10th = document.getElementById('proof10thFileInput');
+      const inputTc = document.getElementById('proofTcFileInput');
+
+      const proof10thBase64 = (input10th && input10th.files && input10th.files[0]) ? await convertFileToBase64(input10th.files[0]) : null;
+      const proofTcBase64 = (inputTc && inputTc.files && inputTc.files[0]) ? await convertFileToBase64(inputTc.files[0]) : null;
 
       const payload = {
         action: "submitStudentApplication",
@@ -403,7 +414,16 @@
         department: document.getElementById('displayBranch').value,
         specialization: document.getElementById('displaySpecialization').value,
         section: document.getElementById('displaySection').value,
-        photoData: photoBase64
+        
+        isNameCorrected: document.getElementById('chkNameCorrection').checked,
+        isFatherCorrected: document.getElementById('chkFatherCorrection').checked,
+        isGenderCorrected: document.getElementById('chkGenderCorrection').checked,
+        isDobCorrected: document.getElementById('chkDobCorrection').checked,
+        isNationalityCorrected: document.getElementById('chkNationalityCorrection').checked,
+
+        photoData: photoBase64,
+        proof10thData: proof10thBase64,
+        proofTcData: proofTcBase64
       };
 
       const response = await fetch(SCRIPT_URL, {
@@ -426,7 +446,7 @@
       submitBtn.innerHTML = `Final Submit Photograph`;
     }
     return false;
-  }
+  };
 
   function convertFileToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -437,7 +457,8 @@
     });
   }
 
-  async function checkStatus() {
+  // Window Scope Binding for Status Checker
+  window.checkStatus = async function() {
     const query = document.getElementById('trackSearchInput').value.trim();
     const resBox = document.getElementById('statusResult');
     if (!query) return;
@@ -464,5 +485,5 @@
     } catch (err) {
       resBox.innerHTML = `<div class="alert alert-danger">Error retrieving status.</div>`;
     }
-  }
+  };
 </script>
