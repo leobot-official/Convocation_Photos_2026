@@ -116,7 +116,40 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFKqXY1sdqGuSOkzcXN1S9Pu3MkC-1z-GxGPUS_sHG_3GSBwLv5HYSW5Knf_TBwqdb/exec";
     const GOOGLE_CLIENT_ID = "984380290235-fhvahq5uitrbecgttrm3q27emlhsb8bg.apps.googleusercontent.com";
+  // Global Google Auth Manager
+window.gsiInitialized = false;
 
+window.initGoogleAuth = function(client_id, callback) {
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    window.google.accounts.id.initialize({
+      client_id: client_id,
+      callback: callback,
+      auto_select: false
+    });
+    window.gsiInitialized = true;
+  }
+};
+
+window.renderGoogleSignIn = function(containerId, callbackHandler) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  // Clear previous instance
+  container.innerHTML = '';
+
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    // Re-initialize for target callback if needed
+    window.google.accounts.id.initialize({
+      client_id: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com", // Replace with your actual Client ID
+      callback: callbackHandler
+    });
+
+    window.google.accounts.id.renderButton(
+      container,
+      { theme: "outline", size: "large", width: "250" }
+    );
+  }
+};
     // GLOBAL HELPER TO RELIABLY RENDER GOOGLE SIGN-IN BUTTON IN DYNAMIC VIEWS
     window.renderGoogleSignIn = function(containerId, callbackFn) {
       const checkAndRender = () => {
