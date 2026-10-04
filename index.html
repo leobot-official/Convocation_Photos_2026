@@ -139,13 +139,17 @@
         const response = await fetch(fileToFetch);
         const htmlText = await response.text();
         
+        // Remove old dynamically injected script tags before appending new ones
+        document.querySelectorAll('.dynamic-portal-script').forEach(s => s.remove());
+
         // Inject HTML
         container.innerHTML = htmlText;
 
-        // Force browser to evaluate injected <script> tags into global scope
+        // Execute script tags safely into global scope
         const scriptTags = container.querySelectorAll('script');
         scriptTags.forEach(script => {
           const newScript = document.createElement('script');
+          newScript.classList.add('dynamic-portal-script'); // Mark for easy removal on portal switch
           if (script.src) {
             newScript.src = script.src;
           } else {
