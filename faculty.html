@@ -124,7 +124,7 @@
   // FACULTY GOOGLE SIGN-IN HANDLER
   window.handleFacultyGoogleSignIn = async function(response) {
     const alertBox = document.getElementById('facultyAuthAlert');
-    alertBox.innerHTML = '';
+    if (alertBox) alertBox.innerHTML = '';
 
     try {
       const base64Url = response.credential.split('.')[1];
@@ -133,7 +133,9 @@
 
       const email = payload.email.toLowerCase();
 
-      alertBox.innerHTML = `<div class="text-primary"><span class="spinner-border spinner-border-sm me-2"></span> Verifying Faculty Authorization...</div>`;
+      if (alertBox) {
+        alertBox.innerHTML = `<div class="text-primary"><span class="spinner-border spinner-border-sm me-2"></span> Verifying Faculty Authorization...</div>`;
+      }
 
       const res = await fetch(SCRIPT_URL, {
         method: "POST",
@@ -163,10 +165,14 @@
 
         loadPendingApplications();
       } else {
-        alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-x-circle me-1"></i> ${data.message}</div>`;
+        if (alertBox) {
+          alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-x-circle me-1"></i> ${data.message}</div>`;
+        }
       }
     } catch (err) {
-      alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Authentication Failed: ${err.message}</div>`;
+      if (alertBox) {
+        alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Authentication Failed: ${err.message}</div>`;
+      }
     }
   };
 
@@ -174,13 +180,15 @@
     currentFaculty = null;
     document.getElementById('facultyPortalWrapper').style.display = 'none';
     document.getElementById('facultyAuthSection').style.display = 'block';
-    document.getElementById('facultyAuthAlert').innerHTML = '';
+    const alertBox = document.getElementById('facultyAuthAlert');
+    if (alertBox) alertBox.innerHTML = '';
 
-    initGoogleSignIn();
+    window.initGoogleSignIn();
   };
 
   window.loadPendingApplications = async function() {
     const container = document.getElementById('applicationsContainer');
+    if (!container) return;
     container.innerHTML = `<div class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading applications...</div>`;
 
     try {
@@ -247,6 +255,8 @@
     }
   };
 
-  // IMMEDIATELY TRIGGER BUTTON RENDER ON MODULE LOAD
-  initGoogleSignIn();
+  // DELAY INITIAL RENDER TO ENSURE DOM INJECTION IS COMPLETE
+  setTimeout(() => {
+    window.initGoogleSignIn();
+  }, 100);
 </script>
