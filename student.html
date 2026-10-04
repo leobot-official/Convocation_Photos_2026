@@ -68,6 +68,30 @@
         <div id="lookupAlert" class="mt-2"></div>
       </div>
 
+      <!-- ALREADY SUBMITTED STATUS BANNER (HIDDEN BY DEFAULT) -->
+      <div id="alreadySubmittedCard" class="card border-info bg-light p-4 mb-4 rounded-4 shadow-sm" style="display: none;">
+        <div class="d-flex align-items-center mb-3 text-info-emphasis">
+          <i class="bi bi-exclamation-circle-fill fs-3 me-2"></i>
+          <h5 class="fw-bold mb-0">Application Already Submitted</h5>
+        </div>
+        <p class="text-muted small">You have already submitted your application for convocation clearance. Further uploads are restricted while under review.</p>
+        
+        <div class="bg-white p-3 rounded-3 border mb-3">
+          <div class="row g-2 small">
+            <div class="col-md-6"><strong>Submission ID:</strong> <span id="subCardId"></span></div>
+            <div class="col-md-6"><strong>Register No:</strong> <span id="subCardRegNo"></span></div>
+            <div class="col-md-6"><strong>Student Name:</strong> <span id="subCardName"></span></div>
+            <div class="col-md-6"><strong>Status:</strong> <span id="subCardStatus" class="badge bg-primary"></span></div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-outline-primary btn-sm fw-bold" onclick="switchToTrackViewWithRegNo()">
+            <i class="bi bi-clock-history me-1"></i> View Live Tracking Details
+          </button>
+        </div>
+      </div>
+
       <!-- STEP 2 & 3 FORM WRAPPER -->
       <form id="studentVerificationForm" onsubmit="return handleVerifiedSubmission(event);">
         
@@ -308,11 +332,26 @@
     }
   };
 
+  // HELPER TO REDIRECT TO STATUS TRACK TAB
+  window.switchToTrackViewWithRegNo = function() {
+    const regNo = document.getElementById('lookupRegNoInput').value.trim();
+    document.getElementById('trackSearchInput').value = regNo;
+    switchStudentTab('statusView', 'studentFlowView', document.getElementById('tabBtn2'), 'tabBtn1');
+    checkStatus();
+  };
+
   // 3. FETCH STUDENT DATA
   window.fetchStudentDataForVerification = async function() {
     const regNo = document.getElementById('lookupRegNoInput').value.trim();
     const alertBox = document.getElementById('lookupAlert');
+    const alreadySubmittedCard = document.getElementById('alreadySubmittedCard');
+    const verificationSection = document.getElementById('verificationSection');
+    const photoSection = document.getElementById('photoSection');
+
     alertBox.innerHTML = '';
+    alreadySubmittedCard.style.display = 'none';
+    verificationSection.style.display = 'none';
+    photoSection.style.display = 'none';
 
     if (!regNo) {
       alertBox.innerHTML = `<div class="alert alert-warning py-2 mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Please enter a valid Register Number.</div>`;
@@ -328,7 +367,17 @@
       });
       const res = await response.json();
 
-      if (res.success && res.data) {
+      if (res.success && res.alreadySubmitted) {
+        // CASE A: STUDENT HAS ALREADY SUBMITTED
+        alertBox.innerHTML = '';
+        document.getElementById('subCardId').innerText = res.data.submissionId || 'N/A';
+        document.getElementById('subCardRegNo').innerText = res.data.regNo || regNo;
+        document.getElementById('subCardName').innerText = res.data.name || 'N/A';
+        document.getElementById('subCardStatus').innerText = res.data.status || 'PENDING';
+        
+        alreadySubmittedCard.style.display = 'block';
+      } else if (res.success && res.data) {
+        // CASE B: NO SUBMISSION FOUND (OR PREVIOUSLY REJECTED) - SHOW FORM
         document.getElementById('displayRegNo').value = res.data.registerNumber || regNo;
         document.getElementById('displayStudentName').value = res.data.studentName || '';
         document.getElementById('displayFatherName').value = res.data.fatherName || '';
@@ -339,7 +388,7 @@
         document.getElementById('displaySpecialization').value = res.data.specialization || '';
         
         document.getElementById('deptYearBadge').innerText = `Year: ${res.data.year || 'N/A'} | Branch: ${res.data.department || res.data.branch || 'N/A'}`;
-        document.getElementById('verificationSection').style.display = 'block';
+        verificationSection.style.display = 'block';
         alertBox.innerHTML = `<div class="alert alert-success py-2 mt-2"><i class="bi bi-check-circle me-1"></i> Record retrieved! Verify details below.</div>`;
       } else {
         alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-x-circle me-1"></i> ${res.message || 'Register Number not found.'}</div>`;
@@ -529,7 +578,7 @@
         </div>`;
     } finally {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `Final Submit Photograph`;
+      submitBtn.innerHTML = `Final Submit Application`;
     }
     return false;
   };
