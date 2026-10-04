@@ -14,12 +14,8 @@
     <p class="text-muted small mb-3">Please sign in with your official university email (@hindustanuniv.ac.in) or registered Gmail address to proceed.</p>
     
     <div class="d-flex justify-content-center">
-      <div id="g_id_onload"
-           data-client_id="984380290235-fhvahq5uitrbecgttrm3q27emlhsb8bg.apps.googleusercontent.com"
-           data-callback="handleGoogleSignIn"
-           data-auto_prompt="false">
-      </div>
-      <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+      <!-- CONTAINER FOR PROGRAMMATIC GOOGLE SIGN-IN BUTTON -->
+      <div id="studentGoogleBtnContainer"></div>
     </div>
     <div id="authAlert" class="mt-3"></div>
   </div>
@@ -276,7 +272,13 @@
 <script>
   var authenticatedStudentEmail = window.authenticatedStudentEmail || "";
 
-  // 1. GOOGLE SIGN-IN HANDLER
+  // 1. INITIALIZE & RENDER GOOGLE SIGN-IN BUTTON
+  window.initStudentGoogleSignIn = function() {
+    if (typeof window.renderGoogleSignIn === 'function') {
+      window.renderGoogleSignIn("studentGoogleBtnContainer", window.handleGoogleSignIn);
+    }
+  };
+
   window.handleGoogleSignIn = function(response) {
     try {
       const base64Url = response.credential.split('.')[1];
@@ -312,6 +314,10 @@
     document.getElementById('authenticatedPortalWrapper').style.display = 'none';
     document.getElementById('authSection').style.display = 'block';
     document.getElementById('displayEmail').value = "";
+    document.getElementById('authAlert').innerHTML = '';
+
+    // Re-render Google Sign-In button on logout
+    initStudentGoogleSignIn();
   };
 
   // 2. TAB SWITCHER
@@ -624,13 +630,16 @@
               <div><strong>HOD Remarks:</strong> ${d.hodRemarks || 'Pending'}</div>
               <div><strong>Dean Remarks:</strong> ${d.deanRemarks || 'Pending'}</div>
             </div>
-            ${isRejected ? `<div class="alert alert-danger mt-3 mb-0 py-2 small">Action Required: Your photo or details were rejected. Please upload a compliant photo with a plain white background.</div>` : ''}
+            ${isRejected ? `<div class="alert alert-danger mt-3 mb-0 py-2 small">Action Required: Your photo or details were rejected. Please re-submit your application.</div>` : ''}
           </div>`;
       } else {
-        resBox.innerHTML = `<div class="alert alert-warning py-2 mt-2"><i class="bi bi-info-circle me-1"></i> ${res.message || 'No records found for query.'}</div>`;
+        resBox.innerHTML = `<div class="alert alert-info py-2">No application record found for: ${query}</div>`;
       }
     } catch (err) {
-      resBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Error retrieving status.</div>`;
+      resBox.innerHTML = `<div class="alert alert-danger py-2">Error loading status: ${err.message}</div>`;
     }
   };
+
+  // IMMEDIATELY TRIGGER BUTTON RENDER ON MODULE LOAD
+  initStudentGoogleSignIn();
 </script>
