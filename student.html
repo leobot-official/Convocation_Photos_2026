@@ -231,8 +231,7 @@
 </div>
 
 <script>
-  let currentStudentData = null;
-
+  var currentStudentData = window.currentStudentData || null;
   // 1. WINDOW SCOPE TAB SWITCHER
   window.switchStudentTab = function(showId, hideId, activeBtn, inactiveBtnId) {
     const showEl = document.getElementById(showId);
