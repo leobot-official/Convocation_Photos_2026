@@ -52,28 +52,13 @@
   </div>
 </div>
 
-<!-- GOOGLE IDENTITY SERVICES SDK WITH ONLOAD CALLBACK -->
-<script src="https://accounts.google.com/gsi/client?onload=initGoogleSignIn" async defer></script>
-
 <script>
   let currentFaculty = null;
 
-  // INITIALIZE AND RENDER GOOGLE SIGN-IN BUTTON PROGRAMMATICALLY
+  // INITIALIZE AND RENDER GOOGLE SIGN-IN BUTTON VIA GLOBAL HELPER
   window.initGoogleSignIn = function() {
-    if (typeof google !== 'undefined' && google.accounts) {
-      google.accounts.id.initialize({
-        client_id: "984380290235-fhvahq5uitrbecgttrm3q27emlhsb8bg.apps.googleusercontent.com",
-        callback: window.handleFacultyGoogleSignIn
-      });
-
-      const btnContainer = document.getElementById("googleBtnContainer");
-      if (btnContainer) {
-        btnContainer.innerHTML = ""; // Clear existing button before re-rendering
-        google.accounts.id.renderButton(
-          btnContainer,
-          { theme: "outline", size: "large", type: "standard", shape: "rectangular", text: "sign_in_with" }
-        );
-      }
+    if (typeof window.renderGoogleSignIn === 'function') {
+      window.renderGoogleSignIn("googleBtnContainer", window.handleFacultyGoogleSignIn);
     }
   };
 
@@ -210,4 +195,7 @@
       alert("Error processing action: " + err.message);
     }
   };
+
+  // IMMEDIATELY TRIGGER BUTTON RENDER ON MODULE LOAD
+  initGoogleSignIn();
 </script>
