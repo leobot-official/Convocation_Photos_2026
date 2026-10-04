@@ -3,7 +3,6 @@
   <!-- BRANDING HEADER BANNER -->
   <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded-4 mb-4 border">
     <div class="d-flex align-items-center gap-3">
-      
       <div>
         <h5 class="fw-bold text-dark mb-0">Convocation Photo Clearance Portal</h5>
         <small class="text-muted">Hindustan Institute of Technology & Science</small>
@@ -68,7 +67,7 @@
             </div>
 
             <div class="col-md-8">
-              <label class="form-label fw-bold small text-muted">Email Address <span class="text-danger">*</span></label>
+              <label class="form-label fw-bold small text-muted">Email Address (@hindustanuniv.ac.in or @gmail.com) <span class="text-danger">*</span></label>
               <input type="email" id="displayEmail" name="studentEmail" class="form-control" required placeholder="student@gmail.com">
             </div>
 
@@ -218,7 +217,7 @@
   <div id="statusView" style="display: none;">
     <div class="row g-2 mb-4">
       <div class="col-md-9">
-        <input type="text" id="trackSearchInput" class="form-control form-control-lg text-uppercase" placeholder="Enter Register Number (e.g., 24SP2170001)">
+        <input type="text" id="trackSearchInput" class="form-control form-control-lg text-uppercase" placeholder="Enter Register Number or Email">
       </div>
       <div class="col-md-3">
         <button type="button" class="btn btn-secondary btn-lg w-100 fw-bold shadow-sm" onclick="checkStatus()">
@@ -232,6 +231,7 @@
 
 <script>
   var currentStudentData = window.currentStudentData || null;
+
   // 1. WINDOW SCOPE TAB SWITCHER
   window.switchStudentTab = function(showId, hideId, activeBtn, inactiveBtnId) {
     const showEl = document.getElementById(showId);
@@ -271,22 +271,25 @@
       const res = await response.json();
 
       if (res.success && res.data) {
-  currentStudentData = res.data;
-  
-  document.getElementById('displayRegNo').value = res.data.registerNumber || regNo;
-  document.getElementById('displayStudentName').value = res.data.studentName || '';
-  document.getElementById('displayFatherName').value = res.data.fatherName || '';
-  document.getElementById('displayGender').value = res.data.gender || '';
-  document.getElementById('displayDob').value = res.data.dob || '';
-  document.getElementById('displayNationality').value = res.data.nationality || '';
-  document.getElementById('displayBranch').value = res.data.department || res.data.branch || '';
-  document.getElementById('displaySpecialization').value = res.data.specialization || '';
-  
-  // Set Student Email (from sheet record or input)
-  if (res.data.email) {
-    document.getElementById('displayEmail').value = res.data.email;
-  }
-} else {
+        currentStudentData = res.data;
+        
+        document.getElementById('displayRegNo').value = res.data.registerNumber || regNo;
+        document.getElementById('displayStudentName').value = res.data.studentName || '';
+        document.getElementById('displayFatherName').value = res.data.fatherName || '';
+        document.getElementById('displayGender').value = res.data.gender || '';
+        document.getElementById('displayDob').value = res.data.dob || '';
+        document.getElementById('displayNationality').value = res.data.nationality || '';
+        document.getElementById('displayBranch').value = res.data.department || res.data.branch || '';
+        document.getElementById('displaySpecialization').value = res.data.specialization || '';
+        
+        if (res.data.email) {
+          document.getElementById('displayEmail').value = res.data.email;
+        }
+
+        document.getElementById('deptYearBadge').innerText = `Year: ${res.data.year || 'N/A'} | Branch: ${res.data.department || res.data.branch || 'N/A'}`;
+        document.getElementById('verificationSection').style.display = 'block';
+        alertBox.innerHTML = `<div class="alert alert-success py-2 mt-2"><i class="bi bi-check-circle me-1"></i> Record retrieved! Please verify details below.</div>`;
+      } else {
         alertBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-x-circle me-1"></i> ${res.message || 'Register Number not found.'}</div>`;
       }
     } catch (err) {
@@ -356,7 +359,6 @@
       return;
     }
 
-    // Enforce Proof Document Validation
     if (document.getElementById('chkNameCorrection').checked) {
       const f10 = document.getElementById('proof10thFileInput');
       if (!f10 || !f10.files || !f10.files[0]) {
@@ -366,6 +368,7 @@
     }
 
     const requiresTc = document.getElementById('chkFatherCorrection').checked ||
+                       document.getElementById('chkGenderCorrection').checked ||
                        document.getElementById('chkDobCorrection').checked ||
                        document.getElementById('chkNationalityCorrection').checked;
     if (requiresTc) {
@@ -421,12 +424,14 @@
       const photoFile = photoFileInput.files ? photoFileInput.files[0] : null;
       const photoBase64 = photoFile ? await convertFileToBase64(photoFile) : null;
 
-      // Proof Document Files
       const input10th = document.getElementById('proof10thFileInput');
       const inputTc = document.getElementById('proofTcFileInput');
 
-      const proof10thBase64 = (input10th && input10th.files && input10th.files[0]) ? await convertFileToBase64(input10th.files[0]) : null;
-      const proofTcBase64 = (inputTc && inputTc.files && inputTc.files[0]) ? await convertFileToBase64(inputTc.files[0]) : null;
+      const file10th = (input10th && input10th.files && input10th.files[0]) ? input10th.files[0] : null;
+      const fileTc = (inputTc && inputTc.files && inputTc.files[0]) ? inputTc.files[0] : null;
+
+      const proof10thBase64 = file10th ? await convertFileToBase64(file10th) : null;
+      const proofTcBase64 = fileTc ? await convertFileToBase64(fileTc) : null;
 
       const payload = {
         action: "submitStudentApplication",
@@ -441,17 +446,17 @@
         specialization: document.getElementById('displaySpecialization').value,
         section: document.getElementById('displaySection').value,
         
-        // Correction Flags
         isNameCorrected: document.getElementById('chkNameCorrection').checked,
         isFatherCorrected: document.getElementById('chkFatherCorrection').checked,
         isGenderCorrected: document.getElementById('chkGenderCorrection').checked,
         isDobCorrected: document.getElementById('chkDobCorrection').checked,
         isNationalityCorrected: document.getElementById('chkNationalityCorrection').checked,
 
-        // Encoded Files
         photoData: photoBase64,
         proof10thData: proof10thBase64,
-        proofTcData: proofTcBase64
+        proof10thMime: file10th ? file10th.type : null,
+        proofTcData: proofTcBase64,
+        proofTcMime: fileTc ? fileTc.type : null
       };
 
       const response = await fetch(SCRIPT_URL, {
@@ -481,12 +486,11 @@
         </div>`;
     } finally {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `Final Submit Photograph`;
+      submitBtn.innerHTML = `Final Submit Application`;
     }
     return false;
   };
 
-  // FILE TO BASE64 CONVERTER
   function convertFileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -512,14 +516,27 @@
       const res = await response.json();
 
       if (res.success && res.data) {
+        const d = res.data;
+        const statusBadge = d.appStatus || d.status || 'PENDING_TEACHER';
+        const isRejected = statusBadge.startsWith('REJECTED');
+        const isApproved = statusBadge === 'APPROVED';
+        const badgeColor = isApproved ? 'success' : isRejected ? 'danger' : 'warning text-dark';
+
         resBox.innerHTML = `
           <div class="card border-0 bg-light p-3 rounded-3 shadow-sm">
-            <h6 class="fw-bold mb-2">Status: <span class="badge bg-${res.data.status === 'Approved' ? 'success' : res.data.status === 'Rejected' ? 'danger' : 'warning'}">${res.data.status}</span></h6>
-            <p class="mb-1"><strong>Remarks:</strong> ${res.data.remarks || 'No remarks provided yet.'}</p>
-            <small class="text-muted">Last Updated: ${res.data.updatedAt || 'N/A'}</small>
+            <h6 class="fw-bold mb-2">Application Status: <span class="badge bg-${badgeColor}">${statusBadge}</span></h6>
+            <div class="small text-muted mb-2"><strong>Register No:</strong> ${d.regNo} | <strong>Name:</strong> ${d.name}</div>
+            <p class="mb-1"><strong>Correction / Review Notes:</strong> ${d.valStatus || 'None'}</p>
+            <hr class="my-2">
+            <div class="small">
+              <div><strong>Teacher Remarks:</strong> ${d.teacherRemarks || 'Pending'}</div>
+              <div><strong>HOD Remarks:</strong> ${d.hodRemarks || 'Pending'}</div>
+              <div><strong>Dean Remarks:</strong> ${d.deanRemarks || 'Pending'}</div>
+            </div>
+            ${isRejected ? `<div class="alert alert-danger mt-3 mb-0 py-2 small">Action Required: Your photo or details were rejected. Please upload a compliant photo with a plain white background.</div>` : ''}
           </div>`;
       } else {
-        resBox.innerHTML = `<div class="alert alert-warning py-2 mt-2"><i class="bi bi-info-circle me-1"></i> No records found for query.</div>`;
+        resBox.innerHTML = `<div class="alert alert-warning py-2 mt-2"><i class="bi bi-info-circle me-1"></i> ${res.message || 'No records found for query.'}</div>`;
       }
     } catch (err) {
       resBox.innerHTML = `<div class="alert alert-danger py-2 mt-2"><i class="bi bi-exclamation-triangle me-1"></i> Error retrieving status.</div>`;
