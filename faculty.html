@@ -63,7 +63,7 @@
 </div>
 
 <script>
-  let activeFacultyEmail = "";
+ var activeFacultyProfiles = window.activeFacultyProfiles || [];
 
   async function loginFaculty() {
     const email = document.getElementById('facultyEmailInput').value.trim();
