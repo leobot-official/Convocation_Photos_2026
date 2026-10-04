@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- GOOGLE IDENTITY SERVICES SDK (LOADED ONCE IN HEAD) -->
+  <!-- GOOGLE IDENTITY SERVICES SDK -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -116,63 +116,29 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFKqXY1sdqGuSOkzcXN1S9Pu3MkC-1z-GxGPUS_sHG_3GSBwLv5HYSW5Knf_TBwqdb/exec";
     const GOOGLE_CLIENT_ID = "984380290235-fhvahq5uitrbecgttrm3q27emlhsb8bg.apps.googleusercontent.com";
-  // Global Google Auth Manager
-window.gsiInitialized = false;
 
-window.initGoogleAuth = function(client_id, callback) {
-  if (window.google && window.google.accounts && window.google.accounts.id) {
-    window.google.accounts.id.initialize({
-      client_id: client_id,
-      callback: callback,
-      auto_select: false
-    });
-    window.gsiInitialized = true;
-  }
-};
-
-window.renderGoogleSignIn = function(containerId, callbackHandler) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  // Clear previous instance
-  container.innerHTML = '';
-
-  if (window.google && window.google.accounts && window.google.accounts.id) {
-    // Re-initialize for target callback if needed
-    window.google.accounts.id.initialize({
-      client_id: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com", // Replace with your actual Client ID
-      callback: callbackHandler
-    });
-
-    window.google.accounts.id.renderButton(
-      container,
-      { theme: "outline", size: "large", width: "250" }
-    );
-  }
-};
     // GLOBAL HELPER TO RELIABLY RENDER GOOGLE SIGN-IN BUTTON IN DYNAMIC VIEWS
     window.renderGoogleSignIn = function(containerId, callbackFn) {
       const checkAndRender = () => {
-        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        if (typeof google !== 'undefined' && google && google.accounts && google.accounts.id) {
           const btnContainer = document.getElementById(containerId);
           if (btnContainer) {
-            btnContainer.innerHTML = ""; // Clear existing button
+            btnContainer.innerHTML = ""; // Clear existing button before rendering
             google.accounts.id.initialize({
               client_id: GOOGLE_CLIENT_ID,
               callback: callbackFn
             });
             google.accounts.id.renderButton(
               btnContainer,
-              { theme: "outline", size: "large", type: "standard", shape: "rectangular", text: "sign_in_with" }
+              { theme: "outline", size: "large", type: "standard", shape: "rectangular", text: "signin_with", width: "250" }
             );
           }
         } else {
-          // If Google SDK is still loading asynchronously, retry shortly
+          // Retry if GIS SDK is still initializing
           setTimeout(checkAndRender, 100);
         }
       };
-      // Delay execution slightly to ensure DOM element is fully visible in document tree
-      setTimeout(checkAndRender, 50);
+      setTimeout(checkAndRender, 100);
     };
 
     async function switchPortal(view) {
@@ -198,20 +164,20 @@ window.renderGoogleSignIn = function(containerId, callbackHandler) {
         }
 
         const response = await fetch(fileToFetch);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const htmlText = await response.text();
         
-        // Remove old dynamically injected portal scripts before appending new ones
+        // Remove old dynamically injected portal scripts
         document.querySelectorAll('.dynamic-portal-script').forEach(s => s.remove());
 
         // Inject HTML
         container.innerHTML = htmlText;
 
-        // Execute script tags safely into global scope
+        // Execute script tags inside dynamic HTML safely
         const scriptTags = container.querySelectorAll('script');
         scriptTags.forEach(script => {
-          // Skip external google gsi scripts inside sub-views as it is already managed by index.html
           if (script.src && script.src.includes('accounts.google.com/gsi/client')) {
-            return;
+            return; // Skip duplicating GIS SDK script
           }
           const newScript = document.createElement('script');
           newScript.classList.add('dynamic-portal-script');
