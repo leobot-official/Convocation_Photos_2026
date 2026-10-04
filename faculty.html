@@ -62,6 +62,44 @@
     }
   };
 
+window.renderStudentCard = async function(response) {
+  // Fallback placeholder if photo is missing
+  const photoSrc = student.photoData 
+    ? (student.photoData.startsWith('data:image') ? student.photoData : `data:image/jpeg;base64,${student.photoData}`)
+    : 'https://via.placeholder.com/150?text=No+Photo';
+
+  return `
+    <div class="card mb-3 shadow-sm">
+      <div class="card-body d-flex align-items-center gap-3">
+        <!-- STUDENT PHOTO PREVIEW -->
+        <div class="text-center" style="width: 120px;">
+          <img src="${photoSrc}" 
+               alt="Student Photo" 
+               class="img-thumbnail rounded" 
+               style="width: 100px; height: 120px; object-fit: cover;"
+               onerror="this.src='https://via.placeholder.com/100x120?text=Error';" />
+        </div>
+
+        <!-- STUDENT DETAILS & APPROVAL -->
+        <div class="flex-grow-1">
+          <h5 class="mb-1">${student.name} (${student.regNo})</h5>
+          <p class="text-muted mb-2">Section: ${student.section} | Status: <span class="badge bg-warning">${student.status}</span></p>
+          
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-success" onclick="approveStudent('${student.rowId}')">
+              <i class="bi bi-check-circle"></i> Approve Photo
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="rejectStudent('${student.rowId}')">
+              <i class="bi bi-x-circle"></i> Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+  
   window.handleFacultyGoogleSignIn = async function(response) {
     const alertBox = document.getElementById('facultyAuthAlert');
     alertBox.innerHTML = '';
