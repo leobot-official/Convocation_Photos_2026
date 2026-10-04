@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- GOOGLE IDENTITY SERVICES SDK (LOADED ONCE IN HEAD) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -114,6 +115,32 @@
   <!-- CONFIGURATION & DYNAMIC LOADER -->
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFKqXY1sdqGuSOkzcXN1S9Pu3MkC-1z-GxGPUS_sHG_3GSBwLv5HYSW5Knf_TBwqdb/exec";
+    const GOOGLE_CLIENT_ID = "984380290235-fhvahq5uitrbecgttrm3q27emlhsb8bg.apps.googleusercontent.com";
+
+    // GLOBAL HELPER TO RELIABLY RENDER GOOGLE SIGN-IN BUTTON IN DYNAMIC VIEWS
+    window.renderGoogleSignIn = function(containerId, callbackFn) {
+      const checkAndRender = () => {
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+          const btnContainer = document.getElementById(containerId);
+          if (btnContainer) {
+            btnContainer.innerHTML = ""; // Clear existing button
+            google.accounts.id.initialize({
+              client_id: GOOGLE_CLIENT_ID,
+              callback: callbackFn
+            });
+            google.accounts.id.renderButton(
+              btnContainer,
+              { theme: "outline", size: "large", type: "standard", shape: "rectangular", text: "sign_in_with" }
+            );
+          }
+        } else {
+          // If Google SDK is still loading asynchronously, retry shortly
+          setTimeout(checkAndRender, 100);
+        }
+      };
+      // Delay execution slightly to ensure DOM element is fully visible in document tree
+      setTimeout(checkAndRender, 50);
+    };
 
     async function switchPortal(view) {
       const container = document.getElementById('portalContainer');
@@ -140,7 +167,7 @@
         const response = await fetch(fileToFetch);
         const htmlText = await response.text();
         
-        // Remove old dynamically injected script tags before appending new ones
+        // Remove old dynamically injected portal scripts before appending new ones
         document.querySelectorAll('.dynamic-portal-script').forEach(s => s.remove());
 
         // Inject HTML
@@ -149,8 +176,12 @@
         // Execute script tags safely into global scope
         const scriptTags = container.querySelectorAll('script');
         scriptTags.forEach(script => {
+          // Skip external google gsi scripts inside sub-views as it is already managed by index.html
+          if (script.src && script.src.includes('accounts.google.com/gsi/client')) {
+            return;
+          }
           const newScript = document.createElement('script');
-          newScript.classList.add('dynamic-portal-script'); // Mark for easy removal on portal switch
+          newScript.classList.add('dynamic-portal-script');
           if (script.src) {
             newScript.src = script.src;
           } else {
