@@ -14,12 +14,8 @@
     <p class="text-muted small mb-3">Please sign in with your official university email (@hindustanuniv.ac.in).</p>
     
     <div class="d-flex justify-content-center">
-      <div id="g_id_onload"
-           data-client_id="984380290235-fhvahq5uitrbecgttrm3q27emlhsb8bg.apps.googleusercontent.com"
-           data-callback="handleFacultyGoogleSignIn"
-           data-auto_prompt="false">
-      </div>
-      <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular"></div>
+      <!-- CONTAINER FOR PROGRAMMATIC GOOGLE SIGN-IN BUTTON -->
+      <div id="googleBtnContainer"></div>
     </div>
     <div id="facultyAuthAlert" class="mt-3"></div>
   </div>
@@ -56,8 +52,30 @@
   </div>
 </div>
 
+<!-- GOOGLE IDENTITY SERVICES SDK WITH ONLOAD CALLBACK -->
+<script src="https://accounts.google.com/gsi/client?onload=initGoogleSignIn" async defer></script>
+
 <script>
   let currentFaculty = null;
+
+  // INITIALIZE AND RENDER GOOGLE SIGN-IN BUTTON PROGRAMMATICALLY
+  window.initGoogleSignIn = function() {
+    if (typeof google !== 'undefined' && google.accounts) {
+      google.accounts.id.initialize({
+        client_id: "984380290235-fhvahq5uitrbecgttrm3q27emlhsb8bg.apps.googleusercontent.com",
+        callback: window.handleFacultyGoogleSignIn
+      });
+
+      const btnContainer = document.getElementById("googleBtnContainer");
+      if (btnContainer) {
+        btnContainer.innerHTML = ""; // Clear existing button before re-rendering
+        google.accounts.id.renderButton(
+          btnContainer,
+          { theme: "outline", size: "large", type: "standard", shape: "rectangular", text: "sign_in_with" }
+        );
+      }
+    }
+  };
 
   window.handleFacultyGoogleSignIn = async function(response) {
     const alertBox = document.getElementById('facultyAuthAlert');
@@ -106,6 +124,9 @@
     document.getElementById('facultyPortalWrapper').style.display = 'none';
     document.getElementById('facultyAuthSection').style.display = 'block';
     document.getElementById('facultyAuthAlert').innerHTML = '';
+
+    // Re-render Google Sign-In button explicitly on logout
+    initGoogleSignIn();
   };
 
   window.loadPendingApplications = async function() {
