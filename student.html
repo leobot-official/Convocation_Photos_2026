@@ -220,14 +220,21 @@
 
         <!-- STEP 3: PHOTO UPLOAD -->
         <div id="photoSection" style="display: none;" class="card border-0 shadow-sm p-3 p-md-4 mb-4 rounded-4 bg-light">
-          <h5 class="fw-bold text-primary mb-3"><i class="bi bi-camera me-2"></i>Step 3: Passport Photograph Upload</h5>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-primary mb-0"><i class="bi bi-camera me-2"></i>Step 3: Passport Photograph Upload</h5>
+            <!-- READ INSTRUCTIONS BUTTON -->
+            <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#photoInstructionModal">
+              <i class="bi bi-info-circle me-1"></i> Read Instructions
+            </button>
+          </div>
+
           <div class="row g-3 mb-3">
             <div class="col-md-8">
               <label class="form-label fw-bold small text-muted">
-                Upload Photo (JPEG, Strictly Max 80KB, Plain White Background) <span class="text-danger">*</span>
+                Upload Photo (JPEG, Strictly Max 80KB, Plain Light Background) <span class="text-danger">*</span>
               </label>
               <input type="file" class="form-control form-control-lg" id="photoFileInput" accept="image/jpeg,image/jpg" required onchange="previewPhoto(this)">
-              <small class="text-muted d-block mt-1">Requirements: Front facing, formal attire, studio lighting, no sunglasses.</small>
+              <small class="text-muted d-block mt-1">Requirements: Formal studio photo, 35mm x 40mm, neutral expression, eyes open, no selfies.</small>
             </div>
             <div class="col-md-4 text-center">
               <label class="form-label fw-bold small text-muted d-block">Preview</label>
@@ -269,6 +276,46 @@
   </div>
 </div>
 
+<!-- PHOTO INSTRUCTIONS MODAL DIALOG -->
+<div class="modal fade" id="photoInstructionModal" tabindex="-1" aria-labelledby="photoInstructionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header bg-primary text-white rounded-top-4">
+        <div>
+          <h6 class="modal-title fw-bold text-uppercase mb-0" id="photoInstructionModalLabel">Office of the Controller of Examinations</h6>
+          <small class="opacity-75">Passport size photo requirements for Degree Certificate</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+          <div>
+            <strong>Important Note:</strong> Photographs that do not comply with these instructions will be rejected by the review committee.
+          </div>
+        </div>
+
+        <ul class="list-group list-group-flush small">
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>The photograph should be in <strong>colour</strong> and of the size of <strong>(35 mm x 40 mm)</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>Image size should be <strong>less than 80 KB</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>Clear Image must be in <strong>JPEG format</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-x-circle text-danger me-2"></i><strong>Do not upload self-taken photographs or selfies.</strong></li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>Photographs should be <strong>formal and taken in proper studio</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>It should have <strong>full face, front view, eyes open</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>Photo should present <strong>full head from top of hair to bottom of chin</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i><strong>Center head within frame</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>The photo should have a <strong>plain light-coloured background</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>There should not be any <strong>distracting shadows, flash reflections on the face or in the background</strong>.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>Head coverings are not permitted except for religious reasons, but the facial features from bottom of chin to top of forehead and both edges of the face must be clearly shown.</li>
+          <li class="list-group-item"><i class="bi bi-check2-circle text-success me-2"></i>The expression on the face should look natural <strong>(Neutral & mouth closed)</strong>.</li>
+        </ul>
+      </div>
+      <div class="modal-footer bg-light rounded-bottom-4">
+        <button type="button" class="btn btn-primary btn-sm px-4 fw-bold" data-bs-dismiss="modal">I Understand</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
   var authenticatedStudentEmail = window.authenticatedStudentEmail || "";
 
@@ -303,6 +350,13 @@
         document.getElementById('authenticatedPortalWrapper').style.display = 'block';
         document.getElementById('userEmailBadge').innerText = authenticatedStudentEmail;
         document.getElementById('displayEmail').value = authenticatedStudentEmail;
+
+        // AUTOMATICALLY SHOW PHOTO INSTRUCTION MODAL UPON SUCCESSFUL LOGIN
+        const photoModalElement = document.getElementById('photoInstructionModal');
+        if (photoModalElement && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+          const photoModal = new bootstrap.Modal(photoModalElement);
+          photoModal.show();
+        }
       }
     } catch (e) {
       console.error("Sign-in error", e);
